@@ -93,3 +93,18 @@ export const getFileMetadataInternal = internalQuery({
     return metadata;
   },
 });
+
+/**
+ * Get file URL from storage ID (internal)
+ */
+export const getFileUrlInternal = internalQuery({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    // Get signed URL for the file
+    const url = await ctx.storage.getUrl(args.storageId);
+    return url;
+  },
+});

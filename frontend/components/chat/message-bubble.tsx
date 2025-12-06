@@ -114,11 +114,11 @@ export function MessageBubble({ message, isUser }: MessageBubbleProps) {
       >
         <div
           className={`
-            rounded-lg px-4 py-2
+            rounded-lg px-4 py-2.5
             ${
               isUser
-                ? "bg-foreground text-background"
-                : "bg-muted text-foreground"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-gray-800 text-white border border-border"
             }
           `}
         >
@@ -139,16 +139,18 @@ export function MessageBubble({ message, isUser }: MessageBubbleProps) {
             <>
               <span>•</span>
               <Badge
-                variant={
-                  message.riskLevel === "high"
-                    ? "destructive"
-                    : message.riskLevel === "medium"
-                    ? "default"
-                    : "secondary"
-                }
-                className="text-xs px-1.5 py-0"
+                className={`
+                  text-xs px-2 py-0.5 font-semibold
+                  ${
+                    message.riskLevel === "high"
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : message.riskLevel === "medium"
+                      ? "bg-yellow-500 text-white hover:bg-yellow-600"
+                      : "bg-green-500 text-white hover:bg-green-600"
+                  }
+                `}
               >
-                {message.riskLevel}
+                {message.riskLevel.toUpperCase()}
               </Badge>
             </>
           )}

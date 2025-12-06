@@ -88,6 +88,21 @@ export const send = action({
       attachments: args.attachments,
     });
 
+    // Update conversation title if it's still "New Conversation"
+    // Generate title from first user message (truncate to 50 chars)
+    if (conversation.title === "New Conversation" || conversation.title === "") {
+      const title = args.content.trim();
+      // Truncate to 50 characters, or use a default if empty
+      const truncatedTitle = title.length > 50 
+        ? title.substring(0, 50).trim() + "..."
+        : title || "New Conversation";
+      
+      await ctx.runMutation(internal.conversations.updateTitleInternal, {
+        conversationId: args.conversationId,
+        title: truncatedTitle,
+      });
+    }
+
     // Update conversation
     await ctx.runMutation(internal.conversations.updateMessageCount, {
       conversationId: args.conversationId,

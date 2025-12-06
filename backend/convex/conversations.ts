@@ -158,6 +158,25 @@ export const updateTitle = mutation({
 });
 
 /**
+ * Update conversation title (internal)
+ */
+export const updateTitleInternal = internalMutation({
+  args: {
+    conversationId: v.id("conversations"),
+    title: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.conversationId, {
+      title: args.title,
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
  * Update message count (internal)
  */
 export const updateMessageCount = internalMutation({

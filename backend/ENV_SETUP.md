@@ -8,7 +8,9 @@ Convex stores environment variables in your deployment, not in local files. Use 
 cd backend
 
 # Set Azure Foundry AI variables
-npx convex env set AZURE_FOUNDRY_BASE_URL "https://your-endpoint.openai.azure.com"
+# Base URL should be the domain only (e.g., https://your-endpoint.services.ai.azure.com)
+# The code will automatically append /anthropic/v1 to the path
+npx convex env set AZURE_FOUNDRY_BASE_URL "https://your-endpoint.services.ai.azure.com"
 npx convex env set AZURE_FOUNDRY_API_KEY "your-api-key-here"
 npx convex env set ANTHROPIC_VERSION "2023-06-01"
 npx convex env set ANTHROPIC_MODEL "claude-3-5-sonnet-20241022"

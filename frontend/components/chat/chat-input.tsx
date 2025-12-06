@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -12,6 +12,88 @@ import { Badge } from "@/components/ui/badge";
 interface ChatInputProps {
   conversationId: Id<"conversations"> | null;
   onMessageSent?: () => void;
+}
+
+// Component for individual attachment preview
+function AttachmentPreview({
+  file,
+  index,
+  uploadProgress,
+  isSending,
+  onRemove,
+}: {
+  file: File;
+  index: number;
+  uploadProgress: number | undefined;
+  isSending: boolean;
+  onRemove: () => void;
+}) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const isImage = file.type.startsWith("image/");
+
+  // Create thumbnail URL for images
+  useEffect(() => {
+    if (isImage) {
+      const url = URL.createObjectURL(file);
+      setThumbnailUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [file, isImage]);
+
+  if (isImage && thumbnailUrl) {
+    return (
+      <div className="relative group rounded-md overflow-hidden border border-border">
+        <img
+          src={thumbnailUrl}
+          alt={file.name}
+          className="h-20 w-20 object-cover"
+        />
+        {uploadProgress !== undefined && uploadProgress < 100 && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="text-xs text-white">
+              {Math.round(uploadProgress)}%
+            </span>
+          </div>
+        )}
+        {!isSending && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={onRemove}
+          >
+            <X className="h-3 w-3 text-white" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <Badge
+      variant="secondary"
+      className="flex items-center gap-2 pr-1"
+    >
+      <span className="text-xs truncate max-w-[150px]">
+        {file.name}
+        {uploadProgress !== undefined && uploadProgress < 100 && (
+          <span className="ml-1 text-muted-foreground">
+            ({Math.round(uploadProgress)}%)
+          </span>
+        )}
+      </span>
+      {!isSending && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-4 w-4 rounded-full"
+          onClick={onRemove}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      )}
+    </Badge>
+  );
 }
 
 export function ChatInput({ conversationId, onMessageSent }: ChatInputProps) {
@@ -131,30 +213,14 @@ export function ChatInput({ conversationId, onMessageSent }: ChatInputProps) {
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           {attachments.map((file, index) => (
-            <Badge
+            <AttachmentPreview
               key={index}
-              variant="secondary"
-              className="flex items-center gap-2 pr-1"
-            >
-              <span className="text-xs truncate max-w-[150px]">
-                {file.name}
-                {uploadProgress[index] !== undefined && uploadProgress[index] < 100 && (
-                  <span className="ml-1 text-muted-foreground">
-                    ({Math.round(uploadProgress[index])}%)
-                  </span>
-                )}
-              </span>
-              {!isSending && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 rounded-full"
-                  onClick={() => removeAttachment(index)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
-            </Badge>
+              file={file}
+              index={index}
+              uploadProgress={uploadProgress[index]}
+              isSending={isSending}
+              onRemove={() => removeAttachment(index)}
+            />
           ))}
         </div>
       )}
