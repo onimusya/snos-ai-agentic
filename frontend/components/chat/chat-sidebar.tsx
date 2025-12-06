@@ -21,6 +21,18 @@ import {
 import { Id } from "@/convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
 
+// Type for conversation based on the query return type
+type Conversation = {
+  _id: Id<"conversations">;
+  _creationTime: number;
+  userId: Id<"users">;
+  title: string;
+  updatedAt: number;
+  messageCount: number;
+  riskLevel?: "high" | "medium" | "low";
+  riskScore?: number;
+};
+
 interface ChatSidebarProps {
   selectedConversationId: Id<"conversations"> | null;
   onSelectConversation: (id: Id<"conversations">) => void;
@@ -38,7 +50,7 @@ export function ChatSidebar({
   const deleteConversation = useMutation(api.conversations.remove);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredConversations = conversations.filter((conv) =>
+  const filteredConversations = conversations.filter((conv: Conversation) =>
     conv.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -156,7 +168,7 @@ export function ChatSidebar({
               {searchQuery ? "No conversations found" : "No conversations yet"}
             </div>
           ) : (
-            filteredConversations.map((conversation) => (
+            filteredConversations.map((conversation: Conversation) => (
               <div
                 key={conversation._id}
                 onClick={() => onSelectConversation(conversation._id)}

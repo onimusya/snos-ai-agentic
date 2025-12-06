@@ -7,6 +7,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, MessageSquare, Bot } from "lucide-react";
 import { MessageBubble } from "./message-bubble";
 
+// Type for message based on the query return type
+type Message = {
+  _id: Id<"messages">;
+  _creationTime: number;
+  conversationId: Id<"conversations">;
+  role: "user" | "assistant";
+  content: string;
+  attachments?: Id<"_storage">[];
+  riskLevel?: "high" | "medium" | "low";
+  riskScore?: number;
+  toolCalls?: Array<{
+    tool: string;
+    input: any;
+    output: any;
+  }>;
+};
+
 interface ChatMessagesProps {
   conversationId: Id<"conversations"> | null;
 }
@@ -57,7 +74,7 @@ export function ChatMessages({ conversationId }: ChatMessagesProps) {
   return (
     <ScrollArea className="flex-1">
       <div className="p-4 space-y-4">
-        {messages.map((message) => (
+        {messages.map((message: Message) => (
           <MessageBubble
             key={message._id}
             message={message}
