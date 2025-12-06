@@ -56,16 +56,24 @@ This guide covers deploying S.N.O.S. AI for production testing.
    # JWT Private Key (REQUIRED for authentication)
    # Must be PKCS#8 formatted RSA private key (PEM format)
    # Generate using: openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
-   # Then convert: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem
+   # Then convert: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem -out pkcs8_key.pem
    # Copy the entire output including BEGIN/END lines and set it:
    npx convex env set JWT_PRIVATE_KEY "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----" --prod
    # Or set it via Convex Dashboard → Settings → Environment Variables (easier for multi-line keys)
+   
+   # JWKS (REQUIRED for authentication)
+   # Generate JWKS from the private key:
+   # node generate-jwks.js pkcs8_key.pem
+   # Copy the JSON output and set it:
+   npx convex env set JWKS '{"keys":[{"kty":"RSA",...}]}' --prod
+   # Or set it via Convex Dashboard → Settings → Environment Variables (easier for JSON)
    ```
    
    **Note:** 
    - `SITE_URL` must match your frontend deployment URL exactly
-   - `JWT_PRIVATE_KEY` is required for OTP and magic link authentication
-   - Generate the JWT key using: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+   - `JWT_PRIVATE_KEY` is required for OTP and magic link authentication (must be PKCS#8 formatted RSA key)
+   - `JWKS` is also required (generate from private key using `node generate-jwks.js`)
+   - See `docs/FIX_JWT_PRIVATE_KEY.md` for detailed generation instructions
 
 5. **Verify environment variables:**
    ```bash
@@ -208,11 +216,25 @@ npx convex env set SITE_URL "https://your-domain.com" --prod
      - Set it if missing: `npx convex env set SITE_URL "https://your-frontend-url.com" --prod`
      - Ensure it matches your frontend URL exactly (no trailing slash)
   
-  2. **`JWT_PRIVATE_KEY` is missing**
-     - Error: "Missing environment variable `JWT_PRIVATE_KEY`"
-     - Generate a key: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-     - Set it: `npx convex env set JWT_PRIVATE_KEY "your-generated-key" --prod`
+  2. **`JWT_PRIVATE_KEY` is missing or invalid format**
+     - Error: "Missing environment variable `JWT_PRIVATE_KEY`" or `"pkcs8" must be PKCS#8 formatted string`
+     - Must be PKCS#8 formatted RSA private key (PEM format), not a random string
+     - Generate using OpenSSL:
+       ```bash
+       openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+       openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem -out pkcs8_key.pem
+       ```
+     - Copy the entire output (including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----`)
+     - Set it via Convex Dashboard → Settings → Environment Variables (easier for multi-line keys)
+     - Or use: `npx convex env set JWT_PRIVATE_KEY "$(cat pkcs8_key.pem)" --prod`
      - This is required for OTP and magic link authentication
+  
+  3. **`JWKS` is missing**
+     - Error: "Missing environment variable `JWKS`"
+     - Generate JWKS from the private key: `node generate-jwks.js pkcs8_key.pem`
+     - Copy the JSON output and set it via Convex Dashboard → Settings → Environment Variables
+     - Or use: `npx convex env set JWKS '{"keys":[...]}' --prod`
+     - This is required for JWT token verification
 
 - Check Resend API key is valid
 - Check Convex Auth logs in dashboard

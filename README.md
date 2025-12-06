@@ -124,7 +124,7 @@ snos-ai-agentic/
 
 **Backend:**
 - Convex (Database, File Storage, Authentication, Functions)
-- Convex Agent (AI Agent framework)
+- Mastra Core Agent (AI Agent framework)
 - Vercel AI SDK
 - Anthropic Claude (via Azure Foundry AI)
 
@@ -146,17 +146,27 @@ snos-ai-agentic/
 
 ### Environment Variables
 
-**Backend** (`backend/.env`):
-```env
-CONVEX_DEPLOYMENT=your-deployment-url
-AZURE_FOUNDRY_BASE_URL=https://your-endpoint.openai.azure.com
+**Backend** (Set via `npx convex env set`):
+```bash
+# AI Agent
+AZURE_FOUNDRY_BASE_URL=https://your-endpoint.services.ai.azure.com
 AZURE_FOUNDRY_API_KEY=your-api-key
 ANTHROPIC_VERSION=2023-06-01
 ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+
+# External Tools
 REALITY_DEFENDER_API_KEY=your-api-key
 VIRUSTOTAL_API_KEY=your-api-key
 FIRECRAWL_API_KEY=your-api-key
+
+# Authentication (REQUIRED)
+AUTH_RESEND_KEY=your-resend-api-key
+SITE_URL=http://localhost:3000  # or https://your-domain.com for production
+JWT_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
+JWKS={"keys":[{"kty":"RSA",...}]}
 ```
+
+**Note:** Environment variables are set using `npx convex env set` in the backend directory. See `backend/ENV_SETUP.md` for detailed instructions.
 
 **Frontend** (`frontend/.env.local`):
 ```env
@@ -175,6 +185,9 @@ See `SETUP.md` for detailed configuration instructions.
 - **[TODO Tasks](./docs/TODO_TASKS.md)**: Task tracking and progress
 - **[Setup Guide](./SETUP.md)**: Detailed setup instructions
 - **[Type Syncing](./SYNC_TYPES.md)**: Guide for syncing Convex types
+- **[Deployment Guide](./docs/DEPLOYMENT.md)**: Production deployment instructions
+- **[Environment Setup](./backend/ENV_SETUP.md)**: Environment variables configuration
+- **[JWT Key Setup](./docs/FIX_JWT_PRIVATE_KEY.md)**: JWT_PRIVATE_KEY and JWKS setup guide
 
 ## 🎨 Design Philosophy
 
@@ -234,7 +247,7 @@ npm run dev
 ```bash
 # Backend
 cd backend
-npx convex deploy
+npx convex deploy --prod
 
 # Frontend
 cd frontend
@@ -242,17 +255,27 @@ npm run build
 npm start
 ```
 
+**Production Deployment:**
+See [Deployment Guide](./docs/DEPLOYMENT.md) for complete production deployment instructions, including:
+- Convex backend deployment
+- Vercel frontend deployment
+- Environment variables setup
+- Authentication configuration
+
 ## 📦 Features
 
 ### Core Features
 
 - ✅ **Chat Interface**: Real-time conversation with AI agent
 - ✅ **Multi-modal Analysis**: Text, images, audio, video, URLs
-- ✅ **Deepfake Detection**: Image, video, and audio analysis
+- ✅ **Vision Analysis**: Image context understanding, OCR, fraud detection
+- ✅ **Deepfake Detection**: Image, video, and audio analysis (on-demand)
 - ✅ **URL Scanning**: Phishing and malicious website detection
+- ✅ **File Upload**: Support for images, videos, and audio files
 - ✅ **Community Reporting**: User-reported threats
 - ✅ **Admin Console**: Content moderation and user management
 - ✅ **Multi-lingual**: English, Malay, Chinese Simplified
+- ✅ **Authentication**: Magic Link, OTP, and Password login
 
 ### Subscription Plans
 
@@ -264,21 +287,39 @@ npm start
 
 The platform uses **Convex Auth** for authentication. Users can:
 - Register with email and password
-- Sign in to their account
+- Sign in with Magic Link (email link)
+- Sign in with OTP (one-time password via email)
+- Sign in with Password
 - Reset forgotten passwords
 - Manage their profile
+
+**Required Environment Variables:**
+- `AUTH_RESEND_KEY` - Resend API key for sending emails
+- `SITE_URL` - Your site URL for auth callbacks
+- `JWT_PRIVATE_KEY` - PKCS#8 formatted RSA private key (generate with OpenSSL)
+- `JWKS` - JSON Web Key Set (generate from private key)
+
+See `backend/ENV_SETUP.md` and `docs/FIX_JWT_PRIVATE_KEY.md` for setup instructions.
 
 ## 🤖 AI Agent
 
 The AI Agent uses:
+- **Mastra Core Agent** framework with Vercel AI SDK
 - **Anthropic Claude** (via Azure Foundry AI) for reasoning
 - **System Prompt** from `docs/SYSTEM_PROMPT.md`
+- **Vision Capabilities** for image analysis (OCR, context understanding, fraud detection)
 - **Tool Calling** for external API integrations:
-  - `scanUrl`: VirusTotal API
-  - `analyzeImage`: Reality Defender API
-  - `analyzeVideo`: Reality Defender API
-  - `analyzeAudio`: Reality Defender API
-  - `webSearch`: Firecrawl API
+  - `scanUrl`: VirusTotal API for URL threat scanning
+  - `analyzeImage`: Reality Defender API for deepfake detection (when explicitly requested)
+  - `analyzeVideo`: Reality Defender API for video deepfake detection
+  - `analyzeAudio`: Reality Defender API for audio deepfake detection
+  - `webSearch`: Firecrawl API for web search and threat intelligence
+
+**Image Analysis:** When users upload images, the agent automatically uses vision capabilities to:
+- Understand image context
+- Extract text via OCR
+- Analyze for fraud/scam indicators
+- Only uses deepfake detection tool when user explicitly requests it
 
 ## 🐛 Troubleshooting
 
@@ -287,6 +328,13 @@ The AI Agent uses:
 - Check that `NEXT_PUBLIC_CONVEX_URL` is set in `.env.local`
 - Make sure the backend is running (`npx convex dev`)
 - Verify the URL is correct (should start with `https://`)
+
+### Authentication errors
+
+- **Missing SITE_URL**: Set `SITE_URL` environment variable in Convex (see `docs/FIX_SITE_URL.md`)
+- **Missing JWT_PRIVATE_KEY**: Generate and set PKCS#8 RSA private key (see `docs/FIX_JWT_PRIVATE_KEY.md`)
+- **Missing JWKS**: Generate JWKS from private key and set it (see `docs/FIX_JWT_PRIVATE_KEY.md`)
+- Verify all auth environment variables: `npx convex env list`
 
 ### TypeScript errors in frontend
 

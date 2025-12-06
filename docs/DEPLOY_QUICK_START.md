@@ -40,6 +40,12 @@ npx convex env set FIRECRAWL_API_KEY "your-key" --prod
 # Authentication
 npx convex env set AUTH_RESEND_KEY "your-key" --prod
 # SITE_URL will be set after frontend deployment
+# JWT_PRIVATE_KEY and JWKS - REQUIRED for authentication
+# Generate JWT_PRIVATE_KEY: openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+# Convert to PKCS#8: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem -out pkcs8_key.pem
+# Generate JWKS: node generate-jwks.js pkcs8_key.pem
+# Set both via Convex Dashboard (easier for multi-line/JSON values)
+# See docs/FIX_JWT_PRIVATE_KEY.md for detailed instructions
 ```
 
 ### 3. Deploy Frontend to Vercel
@@ -89,7 +95,11 @@ npx convex env set SITE_URL "https://your-app.vercel.app" --prod
 ## Troubleshooting
 
 - **Frontend can't connect**: Check `NEXT_PUBLIC_CONVEX_URL` in Vercel
-- **Auth not working**: Verify `SITE_URL` matches frontend URL exactly
+- **Auth not working**: 
+  - Verify `SITE_URL` matches frontend URL exactly
+  - Check `JWT_PRIVATE_KEY` is set (PKCS#8 formatted RSA key)
+  - Check `JWKS` is set (JSON Web Key Set)
+  - See `docs/FIX_JWT_PRIVATE_KEY.md` for setup
 - **AI not responding**: Check all API keys are set in Convex production
 
 For detailed instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
