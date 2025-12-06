@@ -111,24 +111,38 @@ function RegisterForm() {
     }
   };
 
-  const handleOTPVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+      const handleOTPVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setIsLoading(true);
 
-    try {
-      const formData = new FormData();
-      formData.set("email", email);
-      formData.set("code", otpCode);
+        try {
+          const formData = new FormData();
+          formData.set("email", email);
+          formData.set("code", otpCode);
 
-      await signIn("resend-otp", formData);
-      router.push(redirectTo);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+          console.log("[Register] Verifying OTP for:", email);
+          const result = await signIn("resend-otp", formData);
+          console.log("[Register] signIn result:", result);
+          
+          console.log("[Register] ✅ OTP verification successful!");
+          console.log("[Register] Waiting 2 seconds for ConvexAuthProvider to sync...");
+          
+          // Wait longer for ConvexAuthProvider to sync auth token
+          // Then force a full page reload to ensure auth state is properly synced
+          setTimeout(() => {
+            console.log("[Register] Reloading page to sync auth state...");
+            // Store redirect destination in sessionStorage before reload
+            sessionStorage.setItem("authRedirect", redirectTo);
+            // Use window.location.href for full page reload
+            window.location.href = redirectTo;
+          }, 2000); // Increased to 2 seconds
+        } catch (err) {
+          console.error("[Register] OTP verification failed:", err);
+          setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
+          setIsLoading(false);
+        }
+      };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

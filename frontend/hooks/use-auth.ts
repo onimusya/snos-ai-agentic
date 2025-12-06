@@ -21,6 +21,15 @@ export function useAuth() {
   const callbackProcessedRef = useRef(false);
   const pollCountRef = useRef(0);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("[useAuth] User state changed:", {
+      user: user ? { email: user.email, name: user.name } : null,
+      isLoading: user === undefined,
+      isAuthenticated: user !== null,
+    });
+  }, [user]);
+
   // Handle auth callbacks with polling
   useEffect(() => {
     if (typeof window === "undefined" || callbackProcessedRef.current) {
@@ -37,15 +46,18 @@ export function useAuth() {
 
     if (hasCallback) {
       callbackProcessedRef.current = true;
-      console.log("[useAuth] Callback detected, starting auth state polling...");
+      console.log("[useAuth] Callback detected:", window.location.search);
+      console.log("[useAuth] Current user state:", user);
+      console.log("[useAuth] Starting auth state polling...");
 
       // Poll for auth state update (check every 500ms, max 10 times = 5 seconds)
       const pollInterval = setInterval(() => {
         pollCountRef.current += 1;
+        console.log(`[useAuth] Poll ${pollCountRef.current}/10, user:`, user);
         
         // Check if user is now authenticated
         if (user !== null && user !== undefined) {
-          console.log("[useAuth] Auth state updated successfully!");
+          console.log("[useAuth] ✅ Auth state updated successfully! User:", user.email);
           clearInterval(pollInterval);
           // Remove callback params
           const newUrl = window.location.pathname;
@@ -55,7 +67,7 @@ export function useAuth() {
 
         // If we've polled 10 times (5 seconds) and still no auth, reload
         if (pollCountRef.current >= 10) {
-          console.log("[useAuth] Auth state not updated after 5s, reloading page...");
+          console.log("[useAuth] ⚠️ Auth state not updated after 5s, reloading page...");
           clearInterval(pollInterval);
           const newUrl = window.location.pathname;
           window.history.replaceState({}, "", newUrl);

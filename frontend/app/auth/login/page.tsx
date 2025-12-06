@@ -42,11 +42,19 @@ function LoginForm() {
       formData.set("password", password);
       formData.set("flow", "signIn");
 
+      console.log("[Login] Signing in with password for:", email);
       await signIn("password", formData);
-      router.push(redirectTo);
+      
+      console.log("[Login] ✅ Password sign-in successful!");
+      console.log("[Login] Reloading page to sync auth state...");
+      
+      // Force a page reload to ensure ConvexAuthProvider re-initializes with new auth token
+      setTimeout(() => {
+        sessionStorage.setItem("authRedirect", redirectTo);
+        window.location.href = redirectTo;
+      }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sign in");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -99,11 +107,25 @@ function LoginForm() {
       formData.set("email", email);
       formData.set("code", otpCode);
 
-      await signIn("resend-otp", formData);
-      router.push(redirectTo);
+      console.log("[Login] Verifying OTP for:", email);
+      const result = await signIn("resend-otp", formData);
+      console.log("[Login] signIn result:", result);
+      
+      console.log("[Login] ✅ OTP verification successful!");
+      console.log("[Login] Waiting 2 seconds for ConvexAuthProvider to sync...");
+      
+      // Wait longer for ConvexAuthProvider to sync auth token
+      // Then force a full page reload to ensure auth state is properly synced
+      setTimeout(() => {
+        console.log("[Login] Reloading page to sync auth state...");
+        // Store redirect destination in sessionStorage before reload
+        sessionStorage.setItem("authRedirect", redirectTo);
+        // Use window.location.href for full page reload
+        window.location.href = redirectTo;
+      }, 2000); // Increased to 2 seconds
     } catch (err) {
+      console.error("[Login] OTP verification failed:", err);
       setError(err instanceof Error ? err.message : "Invalid code. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };

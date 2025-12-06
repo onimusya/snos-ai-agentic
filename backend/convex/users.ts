@@ -72,12 +72,7 @@ export const updateUser = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
-      throw new Error("Not authenticated");
-    }
-
-    // Get user ID from auth identity
+    // Get user ID from Convex Auth
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
@@ -247,15 +242,7 @@ export const updateSubscription = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    if (!identity.email) {
-      throw new Error("Email not available");
-    }
-
+    // Get user ID from Convex Auth
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
