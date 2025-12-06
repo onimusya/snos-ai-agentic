@@ -32,6 +32,12 @@ This guide covers deploying S.N.O.S. AI for production testing.
 
 4. **Set production environment variables:**
    ```bash
+   # ⚠️ IMPORTANT: Set SITE_URL FIRST (required for authentication)
+   # Use your frontend URL (Vercel deployment URL or custom domain)
+   npx convex env set SITE_URL "https://your-app.vercel.app" --prod
+   # Or if you have a custom domain:
+   # npx convex env set SITE_URL "https://your-domain.com" --prod
+
    # Azure Foundry AI
    npx convex env set AZURE_FOUNDRY_BASE_URL "https://your-endpoint.services.ai.azure.com" --prod
    npx convex env set AZURE_FOUNDRY_API_KEY "your-production-api-key" --prod
@@ -43,10 +49,23 @@ This guide covers deploying S.N.O.S. AI for production testing.
    npx convex env set VIRUSTOTAL_API_KEY "your-production-key" --prod
    npx convex env set FIRECRAWL_API_KEY "your-production-key" --prod
 
-   # Authentication
+   # Authentication (REQUIRED)
    npx convex env set AUTH_RESEND_KEY "your-production-resend-key" --prod
-   npx convex env set SITE_URL "https://your-domain.com" --prod
+   npx convex env set SITE_URL "https://your-app.vercel.app" --prod
+   
+   # JWT Private Key (REQUIRED for authentication)
+   # Must be PKCS#8 formatted RSA private key (PEM format)
+   # Generate using: openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+   # Then convert: openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem
+   # Copy the entire output including BEGIN/END lines and set it:
+   npx convex env set JWT_PRIVATE_KEY "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----" --prod
+   # Or set it via Convex Dashboard → Settings → Environment Variables (easier for multi-line keys)
    ```
+   
+   **Note:** 
+   - `SITE_URL` must match your frontend deployment URL exactly
+   - `JWT_PRIVATE_KEY` is required for OTP and magic link authentication
+   - Generate the JWT key using: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
 5. **Verify environment variables:**
    ```bash
@@ -183,9 +202,21 @@ npx convex env set SITE_URL "https://your-domain.com" --prod
 - Ensure the URL doesn't have trailing slashes
 
 ### Authentication not working
-- Verify `SITE_URL` in Convex matches your frontend URL exactly
+- **Most common issues:**
+  1. **`SITE_URL` is missing or incorrect**
+     - Verify `SITE_URL` is set: `npx convex env get SITE_URL --prod`
+     - Set it if missing: `npx convex env set SITE_URL "https://your-frontend-url.com" --prod`
+     - Ensure it matches your frontend URL exactly (no trailing slash)
+  
+  2. **`JWT_PRIVATE_KEY` is missing**
+     - Error: "Missing environment variable `JWT_PRIVATE_KEY`"
+     - Generate a key: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+     - Set it: `npx convex env set JWT_PRIVATE_KEY "your-generated-key" --prod`
+     - This is required for OTP and magic link authentication
+
 - Check Resend API key is valid
 - Check Convex Auth logs in dashboard
+- Verify all auth environment variables: `npx convex env list --prod`
 
 ### AI Agent not responding
 - Verify all API keys are set in Convex production environment
@@ -204,6 +235,7 @@ npx convex env set SITE_URL "https://your-domain.com" --prod
 - [ ] Frontend deployed to Vercel (or your hosting provider)
 - [ ] `NEXT_PUBLIC_CONVEX_URL` set in frontend environment
 - [ ] `SITE_URL` updated in Convex to match frontend URL
+- [ ] `JWT_PRIVATE_KEY` set in Convex production
 - [ ] Authentication flow tested
 - [ ] AI agent responses working
 - [ ] File uploads working

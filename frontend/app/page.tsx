@@ -188,7 +188,7 @@ function HomeContent() {
             </div>
           </div>
           <p className="text-center text-sm text-muted-foreground mt-8">
-            © 2024 S.N.O.S. AI. All rights reserved.
+            © 2025 S.N.O.S. AI. All rights reserved.
           </p>
         </div>
       </footer>

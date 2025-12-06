@@ -4,3 +4,8 @@ node_modules/
 .convex/
 *.log
 
+# Private keys (never commit these!)
+private_key.pem
+pkcs8_key.pem
+*.pem
+

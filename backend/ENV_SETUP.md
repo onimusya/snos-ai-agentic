@@ -31,6 +31,15 @@ npx convex env set AUTH_RESEND_KEY "your-resend-api-key-here"
 npx convex env set SITE_URL "http://localhost:3000"  # For local dev
 # Or for production:
 # npx convex env set SITE_URL "https://your-domain.com"
+
+# Set JWT Private Key (REQUIRED for authentication)
+# Must be PKCS#8 formatted RSA private key (PEM format)
+# Generate using OpenSSL:
+# openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+# openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem
+# Copy the entire output (including BEGIN/END lines) and set it:
+npx convex env set JWT_PRIVATE_KEY "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+# Note: For multi-line keys, it's easier to set via Convex Dashboard → Settings → Environment Variables
 ```
 
 ## Verify Environment Variables
@@ -89,6 +98,7 @@ FIRECRAWL_API_KEY=your-api-key
 
 - `AUTH_RESEND_KEY` - Resend API key for sending magic links and OTPs
 - `SITE_URL` - Your site URL for auth callbacks (e.g., "http://localhost:3000" or "https://your-domain.com")
+- `JWT_PRIVATE_KEY` - PKCS#8 formatted RSA private key for signing JWT tokens (generate with OpenSSL: `openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048` then `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private_key.pem`)
 
 ## Production vs Development
 
