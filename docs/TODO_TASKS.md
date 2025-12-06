@@ -63,21 +63,24 @@
 ## Phase 2: Authentication & User Management
 
 ### Authentication Pages
-- [ ] Create Login page (`/auth/login`)
-- [ ] Create Register page (`/auth/register`)
-- [ ] Create Forgot Password page (`/auth/forgot-password`)
-- [ ] Implement form validation (Zod schemas)
-- [ ] Add error handling and user feedback
-- [ ] Implement password visibility toggle
-- [ ] Add loading states
+- [x] Create Login page (`/auth/login`)
+- [x] Create Register page (`/auth/register`)
+- [x] Create Forgot Password page (`/auth/forgot-password`)
+- [x] Implement form validation (basic validation implemented)
+- [x] Add error handling and user feedback
+- [x] Implement password visibility toggle
+- [x] Add loading states
+- [ ] Connect to Convex Auth backend (TODO: implement auth mutations)
 
 ### Authentication Backend
-- [x] Implement `auth.signUp` mutation (via Convex Auth - structure ready)
-- [x] Implement `auth.signIn` mutation (via Convex Auth - structure ready)
-- [x] Implement `auth.signOut` mutation (via Convex Auth - structure ready)
+- [x] Implement `auth.signUp` action (basic implementation - needs password hashing)
+- [x] Implement `auth.signIn` action (basic implementation - needs password hashing)
+- [x] Implement `auth.signOut` mutation
 - [ ] Implement password reset flow
 - [x] Set default user role and subscription plan (in users.createUser)
-- [x] Add session management (via Convex Auth)
+- [ ] Add proper session management (JWT tokens or Auth0/Clerk)
+- [ ] Add password hashing (bcrypt) for production security
+- [ ] Integrate with Convex Auth provider (Auth0/Clerk) OR implement custom JWT auth
 
 ### User Profile
 - [ ] Create Profile page (`/profile`)

@@ -1,36 +1,13 @@
 import { Shield } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { Navbar } from "@/components/navbar";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-xl">S.N.O.S.</span>
-          </Link>
-
-          {/* Auth Buttons & Language Switcher */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <LanguageSwitcher />
-            <Link href="/auth">
-              <Button variant="outline" className="rounded-full px-4 sm:px-6">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button className="rounded-full px-4 sm:px-6">Try Free</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative py-32 px-6 overflow-hidden">

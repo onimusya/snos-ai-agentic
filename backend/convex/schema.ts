@@ -1,25 +1,36 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
+  ...authTables,
+  // Extend the users table from authTables with our custom fields
+  // Convex Auth provides: name, image, email, emailVerificationTime, phone, phoneVerificationTime, isAnonymous
   users: defineTable({
-    email: v.string(),
+    // Base fields from Convex Auth (already included via authTables, but we can extend)
     name: v.optional(v.string()),
-    role: v.union(v.literal("user"), v.literal("admin")),
-    subscriptionPlan: v.union(
+    image: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    // Custom fields for S.N.O.S. AI
+    role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
+    subscriptionPlan: v.optional(v.union(
       v.literal("free"),
       v.literal("pro"),
       v.literal("enterprise")
-    ),
-    subscriptionStatus: v.union(
+    )),
+    subscriptionStatus: v.optional(v.union(
       v.literal("active"),
       v.literal("inactive"),
       v.literal("cancelled")
-    ),
+    )),
     subscriptionStartDate: v.optional(v.number()),
     subscriptionEndDate: v.optional(v.number()),
-    usageCount: v.number(),
-    language: v.union(v.literal("en"), v.literal("ms"), v.literal("zh")),
+    usageCount: v.optional(v.number()),
+    language: v.optional(v.union(v.literal("en"), v.literal("ms"), v.literal("zh"))),
     avatarUrl: v.optional(v.string()),
   })
     .index("email", ["email"]),

@@ -111,3 +111,12 @@ body {
   background-color: hsl(var(--border));
   border-radius: 3px;
 }
+
+/* Tabs active state - ensure visibility with high specificity */
+[data-slot="tabs-trigger"][data-state="active"] {
+  background-color: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+  border-color: hsl(var(--foreground)) !important;
+  border-width: 1px !important;
+  font-weight: 600 !important;
+}

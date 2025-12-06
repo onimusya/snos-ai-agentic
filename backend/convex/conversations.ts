@@ -1,5 +1,6 @@
 import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * List all conversations for the current user
@@ -21,23 +22,14 @@ export const list = query({
     })
   ),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return [];
     }
 
     const conversations = await ctx.db
       .query("conversations")
-      .withIndex("userId_updatedAt", (q) => q.eq("userId", user._id))
+      .withIndex("userId_updatedAt", (q) => q.eq("userId", userId))
       .order("desc")
       .collect();
 
@@ -68,22 +60,13 @@ export const get = query({
     v.null()
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return null;
     }
 
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || conversation.userId !== user._id) {
+    if (!conversation || conversation.userId !== userId) {
       return null;
     }
 
@@ -128,22 +111,13 @@ export const create = mutation({
   },
   returns: v.id("conversations"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const conversationId = await ctx.db.insert("conversations", {
-      userId: user._id,
+      userId,
       title: args.title || "New Conversation",
       updatedAt: Date.now(),
       messageCount: 0,
@@ -163,22 +137,13 @@ export const updateTitle = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || conversation.userId !== user._id) {
+    if (!conversation || conversation.userId !== userId) {
       throw new Error("Conversation not found or unauthorized");
     }
 
@@ -252,22 +217,13 @@ export const remove = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || conversation.userId !== user._id) {
+    if (!conversation || conversation.userId !== userId) {
       throw new Error("Conversation not found or unauthorized");
     }
 

@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * Create a community report
@@ -18,26 +19,13 @@ export const create = mutation({
   },
   returns: v.id("reports"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    if (!identity.email) {
-      throw new Error("Email not available");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const reportId = await ctx.db.insert("reports", {
-      userId: user._id,
+      userId,
       type: args.type,
       value: args.value,
       description: args.description,
@@ -96,31 +84,26 @@ export const list = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return [];
     }
 
-    if (!identity.email) {
-      throw new Error("Email not available");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
+    const user = await ctx.db.get(userId);
     if (!user) {
       return [];
     }
 
     let reports;
     
+    // Type guard to ensure we have a user document
+    const userRole = (user as any).role as string | undefined;
+    
     // If admin, show all reports; otherwise, show only user's reports
-    if (user.role !== "admin") {
+    if (userRole !== "admin") {
       reports = await ctx.db
         .query("reports")
-        .withIndex("userId", (q) => q.eq("userId", user._id))
+        .withIndex("userId", (q) => q.eq("userId", userId))
         .collect();
     } else if (args.status) {
       reports = await ctx.db
@@ -159,21 +142,18 @@ export const review = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    if (!identity.email) {
-      throw new Error("Email not available");
+    const admin = await ctx.db.get(userId);
+    if (!admin) {
+      throw new Error("User not found");
     }
-
-    const admin = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!admin || admin.role !== "admin") {
+    
+    const adminRole = (admin as any).role as string | undefined;
+    if (adminRole !== "admin") {
       throw new Error("Unauthorized: Admin access required");
     }
 
@@ -184,7 +164,7 @@ export const review = mutation({
 
     await ctx.db.patch(args.reportId, {
       status: args.status,
-      reviewedBy: admin._id,
+      reviewedBy: userId,
       reviewedAt: Date.now(),
     });
 
@@ -194,7 +174,7 @@ export const review = mutation({
         type: report.type as "phone" | "url" | "email",
         value: report.value,
         verified: true,
-        verifiedBy: admin._id,
+        verifiedBy: userId,
         verifiedAt: Date.now(),
         reportId: args.reportId,
         riskLevel: args.riskLevel,

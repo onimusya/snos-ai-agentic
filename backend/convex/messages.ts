@@ -1,6 +1,7 @@
 import { query, mutation, action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * List messages in a conversation
@@ -33,22 +34,13 @@ export const list = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (!user) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return [];
     }
 
     const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || conversation.userId !== user._id) {
+    if (!conversation || conversation.userId !== userId) {
       return [];
     }
 
@@ -75,24 +67,16 @@ export const send = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity || !identity.email) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
-    }
-
-    // Get user directly
-    const user = await ctx.runQuery(internal.users.getByEmail, {
-      email: identity.email,
-    });
-    if (!user) {
-      throw new Error("User not found");
     }
 
     // Verify conversation belongs to user
     const conversation = await ctx.runQuery(internal.conversations.getInternal, {
       conversationId: args.conversationId,
     });
-    if (!conversation || conversation.userId !== user._id) {
+    if (!conversation || conversation.userId !== userId) {
       throw new Error("Conversation not found");
     }
 
