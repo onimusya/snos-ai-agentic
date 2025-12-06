@@ -1,9 +1,13 @@
-import { Shield } from "lucide-react";
+"use client";
+
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Shield, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 
-export default function Home() {
+function HomeContent() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
@@ -189,5 +193,23 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function HomeWithCallback() {
+  // Note: Callback handling is now done in useAuth hook
+  // This keeps the logic centralized
+  return <HomeContent />;
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <HomeWithCallback />
+    </Suspense>
   );
 }

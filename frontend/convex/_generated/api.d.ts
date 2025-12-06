@@ -12,6 +12,7 @@ import type * as agent from "../agent.js";
 import type * as auth from "../auth.js";
 import type * as authQueries from "../authQueries.js";
 import type * as conversations from "../conversations.js";
+import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as reports from "../reports.js";
 import type * as tools from "../tools.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   authQueries: typeof authQueries;
   conversations: typeof conversations;
+  http: typeof http;
   messages: typeof messages;
   reports: typeof reports;
   tools: typeof tools;

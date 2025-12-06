@@ -20,8 +20,8 @@ export function Navbar() {
   const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const router = useRouter();
 
-  // Note: Convex queries automatically refetch when auth state changes
-  // The query will update once Convex Auth processes the magic link callback
+  // Note: Callback handling is now done in useAuth hook
+  // This keeps the logic centralized and ensures proper polling
 
   const handleSignOut = async () => {
     try {
