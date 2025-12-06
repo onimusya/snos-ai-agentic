@@ -10,8 +10,8 @@ import Link from "next/link";
 
 export default function TestConnectionPage() {
   // Test query to check if Convex is connected
-  const currentUser = useQuery(api.auth.getCurrentUser);
-  const isAdmin = useQuery(api.auth.isAdmin);
+  const currentUser = useQuery(api.authQueries.getCurrentUser);
+  const isAdmin = useQuery(api.authQueries.isAdmin);
 
   const connectionStatus = currentUser !== undefined ? "connected" : "loading";
   const hasError = currentUser === undefined && isAdmin === undefined;
