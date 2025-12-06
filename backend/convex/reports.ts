@@ -23,9 +23,13 @@ export const create = mutation({
       throw new Error("Not authenticated");
     }
 
+    if (!identity.email) {
+      throw new Error("Email not available");
+    }
+
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -97,25 +101,37 @@ export const list = query({
       return [];
     }
 
+    if (!identity.email) {
+      throw new Error("Email not available");
+    }
+
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
       return [];
     }
 
-    let query = ctx.db.query("reports");
-
+    let reports;
+    
     // If admin, show all reports; otherwise, show only user's reports
     if (user.role !== "admin") {
-      query = query.withIndex("userId", (q) => q.eq("userId", user._id));
+      reports = await ctx.db
+        .query("reports")
+        .withIndex("userId", (q) => q.eq("userId", user._id))
+        .collect();
     } else if (args.status) {
-      query = query.withIndex("status", (q) => q.eq("status", args.status));
+      reports = await ctx.db
+        .query("reports")
+        .withIndex("status", (q) => q.eq("status", args.status!))
+        .collect();
+    } else {
+      reports = await ctx.db
+        .query("reports")
+        .collect();
     }
-
-    const reports = await query.collect();
 
     // Filter by type if provided
     if (args.type) {
@@ -148,9 +164,13 @@ export const review = mutation({
       throw new Error("Not authenticated");
     }
 
+    if (!identity.email) {
+      throw new Error("Email not available");
+    }
+
     const admin = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!admin || admin.role !== "admin") {

@@ -29,13 +29,13 @@ export const getCurrentUser = query({
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       return null;
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -63,13 +63,13 @@ export const isAdmin = query({
   returns: v.boolean(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       return false;
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     return user?.role === "admin" || false;

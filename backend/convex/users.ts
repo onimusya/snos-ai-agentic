@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -48,13 +48,13 @@ export const updateUser = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       throw new Error("Not authenticated");
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -132,6 +132,59 @@ export const getUser = query({
 });
 
 /**
+ * Get user by email (internal)
+ */
+export const getByEmail = internalQuery({
+  args: {
+    email: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      email: v.string(),
+      name: v.optional(v.string()),
+      role: v.union(v.literal("user"), v.literal("admin")),
+      subscriptionPlan: v.union(
+        v.literal("free"),
+        v.literal("pro"),
+        v.literal("enterprise")
+      ),
+      subscriptionStatus: v.union(
+        v.literal("active"),
+        v.literal("inactive"),
+        v.literal("cancelled")
+      ),
+      usageCount: v.number(),
+      language: v.union(v.literal("en"), v.literal("ms"), v.literal("zh")),
+      avatarUrl: v.optional(v.string()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      subscriptionPlan: user.subscriptionPlan,
+      subscriptionStatus: user.subscriptionStatus,
+      usageCount: user.usageCount,
+      language: user.language,
+      avatarUrl: user.avatarUrl,
+    };
+  },
+});
+
+/**
  * Update subscription plan (admin only)
  */
 export const updateSubscription = mutation({
@@ -151,9 +204,13 @@ export const updateSubscription = mutation({
       throw new Error("Not authenticated");
     }
 
+    if (!identity.email) {
+      throw new Error("Email not available");
+    }
+
     const admin = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!admin || admin.role !== "admin") {

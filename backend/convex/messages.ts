@@ -1,4 +1,4 @@
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -34,13 +34,13 @@ export const list = query({
   ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       return [];
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -54,7 +54,7 @@ export const list = query({
 
     const messages = await ctx.db
       .query("messages")
-      .withIndex("conversationId_creationTime", (q) =>
+      .withIndex("conversationId", (q) =>
         q.eq("conversationId", args.conversationId)
       )
       .order("asc")
@@ -76,20 +76,23 @@ export const send = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       throw new Error("Not authenticated");
     }
 
-    const user = await ctx.runQuery(internal.auth.getCurrentUser);
+    // Get user directly
+    const user = await ctx.runQuery(internal.users.getByEmail, {
+      email: identity.email,
+    });
     if (!user) {
       throw new Error("User not found");
     }
 
     // Verify conversation belongs to user
-    const conversation = await ctx.runQuery(internal.conversations.get, {
+    const conversation = await ctx.runQuery(internal.conversations.getInternal, {
       conversationId: args.conversationId,
     });
-    if (!conversation) {
+    if (!conversation || conversation.userId !== user._id) {
       throw new Error("Conversation not found");
     }
 
@@ -119,7 +122,7 @@ export const send = action({
 /**
  * Create a message (internal)
  */
-export const create = mutation({
+export const create = internalMutation({
   args: {
     conversationId: v.id("conversations"),
     role: v.union(v.literal("user"), v.literal("assistant")),
@@ -158,7 +161,7 @@ export const create = mutation({
 /**
  * Update message with risk assessment (internal)
  */
-export const updateRisk = mutation({
+export const updateRisk = internalMutation({
   args: {
     messageId: v.id("messages"),
     riskLevel: v.union(v.literal("high"), v.literal("medium"), v.literal("low")),

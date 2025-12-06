@@ -1,4 +1,4 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -22,13 +22,13 @@ export const list = query({
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       return [];
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -69,13 +69,13 @@ export const get = query({
   ),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       return null;
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -92,6 +92,34 @@ export const get = query({
 });
 
 /**
+ * Get a single conversation by ID (internal)
+ */
+export const getInternal = internalQuery({
+  args: {
+    conversationId: v.id("conversations"),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("conversations"),
+      _creationTime: v.number(),
+      userId: v.id("users"),
+      title: v.string(),
+      updatedAt: v.number(),
+      messageCount: v.number(),
+      riskLevel: v.optional(
+        v.union(v.literal("high"), v.literal("medium"), v.literal("low"))
+      ),
+      riskScore: v.optional(v.number()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    return conversation;
+  },
+});
+
+/**
  * Create a new conversation
  */
 export const create = mutation({
@@ -101,13 +129,13 @@ export const create = mutation({
   returns: v.id("conversations"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       throw new Error("Not authenticated");
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -136,13 +164,13 @@ export const updateTitle = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       throw new Error("Not authenticated");
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {
@@ -225,13 +253,13 @@ export const remove = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    if (!identity || !identity.email) {
       throw new Error("Not authenticated");
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email))
+      .withIndex("email", (q) => q.eq("email", identity.email!))
       .first();
 
     if (!user) {

@@ -8,6 +8,7 @@ Run this from the project root:
 
 ```bash
 cp backend/convex/_generated/api.d.ts frontend/convex/_generated/api.d.ts
+cp backend/convex/_generated/api.js frontend/convex/_generated/api.js
 cp backend/convex/_generated/server.d.ts frontend/convex/_generated/server.d.ts
 cp backend/convex/_generated/dataModel.d.ts frontend/convex/_generated/dataModel.d.ts
 ```
@@ -20,6 +21,7 @@ You can create a script to automate this. Create `sync-types.sh`:
 #!/bin/bash
 echo "Syncing Convex types from backend to frontend..."
 cp backend/convex/_generated/api.d.ts frontend/convex/_generated/api.d.ts
+cp backend/convex/_generated/api.js frontend/convex/_generated/api.js
 cp backend/convex/_generated/server.d.ts frontend/convex/_generated/server.d.ts
 cp backend/convex/_generated/dataModel.d.ts frontend/convex/_generated/dataModel.d.ts
 echo "Types synced successfully!"
