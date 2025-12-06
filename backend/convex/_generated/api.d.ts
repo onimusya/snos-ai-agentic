@@ -15,6 +15,7 @@ import type * as conversations from "../conversations.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as reports from "../reports.js";
+import type * as storage from "../storage.js";
 import type * as tools from "../tools.js";
 import type * as users from "../users.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   messages: typeof messages;
   reports: typeof reports;
+  storage: typeof storage;
   tools: typeof tools;
   users: typeof users;
 }>;

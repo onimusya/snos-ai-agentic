@@ -40,6 +40,7 @@ export default defineSchema({
     title: v.string(),
     updatedAt: v.number(),
     messageCount: v.number(),
+    threadId: v.optional(v.string()), // Agent thread ID for this conversation
     riskLevel: v.optional(v.union(
       v.literal("high"),
       v.literal("medium"),

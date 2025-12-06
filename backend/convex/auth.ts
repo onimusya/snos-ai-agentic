@@ -9,6 +9,34 @@ import { RandomReader, generateRandomString } from "@oslojs/crypto/random";
 const ResendMagicLink = Resend({
   id: "resend",
   apiKey: process.env.AUTH_RESEND_KEY,
+  async sendVerificationRequest({ identifier: email, provider, url }) {
+    const resend = new ResendAPI(provider.apiKey);
+    const { error } = await resend.emails.send({
+      from: "S.N.O.S. AI <noreply@connesis.com>",
+      to: [email],
+      subject: `Sign in to S.N.O.S. AI`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Sign in to S.N.O.S. AI</h2>
+          <p>Click the link below to sign in:</p>
+          <div style="margin: 20px 0;">
+            <a href="${url}" style="background: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Sign In
+            </a>
+          </div>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${url}</p>
+          <p>This link will expire in 24 hours.</p>
+          <p>If you didn't request this link, you can safely ignore this email.</p>
+        </div>
+      `,
+      text: `Sign in to S.N.O.S. AI by clicking this link: ${url}\n\nThis link will expire in 24 hours.`,
+    });
+
+    if (error) {
+      throw new Error(JSON.stringify(error));
+    }
+  },
 });
 
 // OTP Provider (Resend with OTP)
@@ -29,7 +57,7 @@ const ResendOTP = Email({
   async sendVerificationRequest({ identifier: email, provider, token }) {
     const resend = new ResendAPI(provider.apiKey);
     const { error } = await resend.emails.send({
-      from: "S.N.O.S. AI <onboarding@resend.dev>",
+      from: "S.N.O.S. AI <noreply@connesis.com>",
       to: [email],
       subject: `Sign in to S.N.O.S. AI`,
       html: `
@@ -69,7 +97,7 @@ const ResendOTPPasswordReset = Email({
   async sendVerificationRequest({ identifier: email, provider, token }) {
     const resend = new ResendAPI(provider.apiKey);
     const { error } = await resend.emails.send({
-      from: "S.N.O.S. AI <onboarding@resend.dev>",
+      from: "S.N.O.S. AI <noreply@connesis.com>",
       to: [email],
       subject: `Reset your password in S.N.O.S. AI`,
       html: `

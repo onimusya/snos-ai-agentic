@@ -89,6 +89,7 @@ export const getInternal = internalQuery({
       title: v.string(),
       updatedAt: v.number(),
       messageCount: v.number(),
+      threadId: v.optional(v.string()),
       riskLevel: v.optional(
         v.union(v.literal("high"), v.literal("medium"), v.literal("low"))
       ),
@@ -201,6 +202,25 @@ export const updateRisk = internalMutation({
     await ctx.db.patch(args.conversationId, {
       riskLevel: args.riskLevel,
       riskScore: args.riskScore,
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Update conversation thread ID (internal)
+ */
+export const updateThreadId = internalMutation({
+  args: {
+    conversationId: v.id("conversations"),
+    threadId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.conversationId, {
+      threadId: args.threadId,
       updatedAt: Date.now(),
     });
 

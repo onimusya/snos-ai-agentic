@@ -104,6 +104,43 @@ export const send = action({
 });
 
 /**
+ * Get a message by ID (internal)
+ */
+export const getInternal = internalQuery({
+  args: {
+    messageId: v.id("messages"),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("messages"),
+      _creationTime: v.number(),
+      conversationId: v.id("conversations"),
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      content: v.string(),
+      attachments: v.optional(v.array(v.id("_storage"))),
+      riskLevel: v.optional(
+        v.union(v.literal("high"), v.literal("medium"), v.literal("low"))
+      ),
+      riskScore: v.optional(v.number()),
+      toolCalls: v.optional(
+        v.array(
+          v.object({
+            tool: v.string(),
+            input: v.any(),
+            output: v.any(),
+          })
+        )
+      ),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    return message;
+  },
+});
+
+/**
  * Create a message (internal)
  */
 export const create = internalMutation({
@@ -139,6 +176,38 @@ export const create = internalMutation({
     });
 
     return messageId;
+  },
+});
+
+/**
+ * List messages for agent context (internal)
+ */
+export const listForAgent = internalQuery({
+  args: {
+    conversationId: v.id("conversations"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      content: v.string(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("conversationId", (q) =>
+        q.eq("conversationId", args.conversationId)
+      )
+      .order("desc")
+      .take(limit);
+
+    // Reverse to get chronological order
+    return messages.reverse().map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
   },
 });
 

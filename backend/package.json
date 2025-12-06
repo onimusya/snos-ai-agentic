@@ -7,13 +7,18 @@
     "deploy": "convex deploy"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.53",
     "@anthropic-ai/sdk": "^0.32.0",
     "@auth/core": "^0.37.0",
+    "@convex-dev/agent": "^0.3.2",
     "@convex-dev/auth": "^0.0.90",
+    "@mastra/core": "^0.24.6",
     "@oslojs/crypto": "^1.0.1",
-    "ai": "^4.3.19",
+    "ai": "^5.0.108",
     "convex": "^1.30.0",
-    "resend": "^6.5.2"
+    "convex-helpers": "^0.1.106",
+    "resend": "^6.5.2",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
